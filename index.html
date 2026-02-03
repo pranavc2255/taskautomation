@@ -29,6 +29,20 @@
             --border: #e5e7eb;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            
+            /* Priority Colors */
+            --priority-critical: #dc2626;
+            --priority-critical-bg: #fef2f2;
+            --priority-critical-border: #fecaca;
+            --priority-high: #ea580c;
+            --priority-high-bg: #fff7ed;
+            --priority-high-border: #fed7aa;
+            --priority-medium: #2563eb;
+            --priority-medium-bg: #eff6ff;
+            --priority-medium-border: #bfdbfe;
+            --priority-low: #6b7280;
+            --priority-low-bg: #f9fafb;
+            --priority-low-border: #e5e7eb;
         }
 
         * {
@@ -511,11 +525,27 @@
             justify-content: space-between;
             box-shadow: var(--shadow);
             transition: all 0.3s ease;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .task-item:hover {
             transform: translateY(-3px);
             box-shadow: var(--shadow-lg);
+        }
+
+        /* Priority-based border colors */
+        .task-item.priority-critical {
+            border-left-color: var(--priority-critical);
+        }
+        .task-item.priority-high {
+            border-left-color: var(--priority-high);
+        }
+        .task-item.priority-medium {
+            border-left-color: var(--priority-medium);
+        }
+        .task-item.priority-low {
+            border-left-color: var(--priority-low);
         }
 
         .task-number-box {
@@ -547,6 +577,7 @@
         .task-content {
             flex-grow: 1;
             padding-right: 20px;
+            min-width: 200px;
         }
 
         .task-title {
@@ -601,6 +632,61 @@
             cursor: pointer;
             border-radius: 6px;
             accent-color: var(--success);
+        }
+
+        /* Task Actions Container */
+        .task-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        /* Priority Select Dropdown */
+        .priority-select {
+            padding: 8px 30px 8px 12px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: inherit;
+            font-weight: 600;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 14px;
+            transition: all 0.2s ease;
+            min-width: 110px;
+        }
+
+        .priority-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Priority select color variants */
+        .priority-select.priority-critical {
+            color: var(--priority-critical);
+            background-color: var(--priority-critical-bg);
+            border-color: var(--priority-critical-border);
+        }
+        .priority-select.priority-high {
+            color: var(--priority-high);
+            background-color: var(--priority-high-bg);
+            border-color: var(--priority-high-border);
+        }
+        .priority-select.priority-medium {
+            color: var(--priority-medium);
+            background-color: var(--priority-medium-bg);
+            border-color: var(--priority-medium-border);
+        }
+        .priority-select.priority-low {
+            color: var(--priority-low);
+            background-color: var(--priority-low-bg);
+            border-color: var(--priority-low-border);
         }
 
         .btn-delete {
@@ -725,8 +811,22 @@
                 gap: 15px;
             }
 
-            .btn-delete {
+            .task-content {
+                padding-right: 0;
                 width: 100%;
+            }
+
+            .task-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .btn-delete {
+                flex: 1;
+            }
+
+            .priority-select {
+                flex: 1;
             }
         }
 
@@ -865,7 +965,7 @@
         <header class="app-header">
             <h1>✨ Taskautomation</h1>
             <div class="user-info">
-                <span class="user-email" id="userEmail">user@email.com</span>
+                <span class="user-email" id="userEmail">user@example.com</span>
                 <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
             </div>
         </header>
@@ -883,13 +983,23 @@
             <div class="code-block" id="aiPrompt">Please analyze the meeting data I provide below. Extract all tasks and action items.
 
 Format the output strictly as a list, with one task per line using this exact format:
-Task Description -- Category -- Deadline (YYYY-MM-DD) -- Date Assigned: YYYY-MM-DD
+Task Description -- Category -- Deadline (YYYY-MM-DD) -- Date Assigned: YYYY-MM-DD -- Priority
 
 Rules:
 1. If no specific deadline is mentioned, write "0000-00-00".
 2. If "today" is mentioned for assignment date, use the actual date of the meeting.
 3. Categories examples: Work, Personal, Research, Admin, Finance.
 4. Do not use bullet points or numbering at the start of the line.
+5. Priority must be one of: Critical, High, Medium, Low
+   - Use "Critical" for tasks with words like: urgent, ASAP, immediately, critical, emergency
+   - Use "High" for tasks with words like: important, priority, soon, this week
+   - Use "Low" for tasks with words like: whenever, eventually, low priority, no rush, when you can
+   - Use "Medium" for all other tasks (default)
+
+Example output:
+Submit Q3 Report -- Finance -- 2025-10-15 -- 2025-10-01 -- High
+Review team feedback -- Work -- 0000-00-00 -- 2025-10-01 -- Medium
+Call vendor ASAP -- Admin -- 2025-10-02 -- 2025-10-01 -- Critical
 
 Here is the meeting data:
 [PASTE YOUR MEETING NOTES HERE]</div>
@@ -900,9 +1010,9 @@ Here is the meeting data:
         <div class="card">
             <label for="rawInput"><strong>Paste your formatted tasks below:</strong></label>
             <p style="font-size: 0.95rem; color: var(--text-light); margin-bottom: 15px;">
-                <strong style="color: var(--primary);">Format:</strong> Task Name -- Category -- Deadline -- Date Assigned
+                <strong style="color: var(--primary);">Format:</strong> Task Name -- Category -- Deadline -- Date Assigned -- Priority (optional)
             </p>
-            <textarea id="rawInput" placeholder="Example: Submit Q3 Report -- Finance -- Deadline: 2025-10-15 -- Assigned: 2025-10-01"></textarea>
+            <textarea id="rawInput" placeholder="Example: Submit Q3 Report -- Finance -- Deadline: 2025-10-15 -- Assigned: 2025-10-01 -- High"></textarea>
             <button class="btn-primary" onclick="processText()">➕ Add Tasks to List</button>
         </div>
 
@@ -913,10 +1023,12 @@ Here is the meeting data:
                 <select id="categoryFilter" onchange="setFilter(this.value)" class="filter-select"></select>
             </div>
             <div class="filter-group">
-                <label for="sortOrder">Sort by Date</label>
+                <label for="sortOrder">Sort Tasks</label>
                 <select id="sortOrder" onchange="setSortOrder(this.value)" class="filter-select">
-                    <option value="desc" selected>Latest First</option>
-                    <option value="asc">Earliest First</option>
+                    <option value="date-desc" selected>Latest First</option>
+                    <option value="date-asc">Earliest First</option>
+                    <option value="priority-desc">Priority: High to Low</option>
+                    <option value="priority-asc">Priority: Low to High</option>
                 </select>
             </div>
             <button class="btn-danger-outline" onclick="deleteAllTasks()">🗑️ Delete All</button>
@@ -926,7 +1038,7 @@ Here is the meeting data:
         <ul id="taskList"></ul>
 
         <div class="credits">
-            Created by Pranav Chougule | <a href="mailto:pranavc2204@gmail.com">pranavc2204@gmail.com</a>
+            Created by Pranav Chougule | <a href="mailto:pranavchougule988@gmail.com">pranavchougule988@gmail.com</a>
         </div>
     </div>
 
@@ -970,6 +1082,15 @@ Here is the meeting data:
         };
         // ============================================
 
+        // Priority Configuration
+        const PRIORITY_LEVELS = ['Critical', 'High', 'Medium', 'Low'];
+        const PRIORITY_WEIGHTS = {
+            'Critical': 4,
+            'High': 3,
+            'Medium': 2,
+            'Low': 1
+        };
+
         // Initialize Firebase
         let app, auth, db, user, tasksCollection;
         let tasks = [];
@@ -977,7 +1098,7 @@ Here is the meeting data:
 
         const CATEGORIES = ["All", "Work", "Personal", "Finance", "Urgent", "Admin", "Research", "Academic", "Other"];
         let currentFilter = "All";
-        let currentSortOrder = "desc";
+        let currentSortOrder = "date-desc";
         const LOCAL_STORAGE_KEY = 'taskautomation_tasks';
 
         // Check if Firebase is configured
@@ -1190,6 +1311,15 @@ Here is the meeting data:
             }
         }
 
+        // Helper function to parse priority from text
+        function parsePriorityFromText(text) {
+            const normalizedText = text.toLowerCase().trim();
+            if (PRIORITY_LEVELS.map(p => p.toLowerCase()).includes(normalizedText)) {
+                return PRIORITY_LEVELS.find(p => p.toLowerCase() === normalizedText);
+            }
+            return 'Medium'; // Default priority
+        }
+
         window.processText = async function() {
             const inputArea = document.getElementById('rawInput');
             const text = inputArea.value.trim();
@@ -1204,12 +1334,26 @@ Here is the meeting data:
                 const parts = sanitized.split('--').map(part => part.trim());
                 
                 if (parts.length >= 3) {
+                    // Check if last part is a priority
+                    let priority = 'Medium'; // Default priority
+                    let hasPriorityField = false;
+                    
+                    if (parts.length >= 5) {
+                        // Format: Task -- Category -- Deadline -- Date -- Priority
+                        const possiblePriority = parts[4];
+                        if (PRIORITY_LEVELS.map(p => p.toLowerCase()).includes(possiblePriority.toLowerCase())) {
+                            priority = parsePriorityFromText(possiblePriority);
+                            hasPriorityField = true;
+                        }
+                    }
+
                     const taskObj = {
                         id: Date.now().toString(36) + Math.random().toString(36).substring(2),
                         title: parts[0] || "Unknown Task",
                         category: parts.length >= 4 ? parts[1] : "Other",
                         deadline: parts.length >= 4 ? parts[2] : parts[1] || "",
                         assigned: parts.length >= 4 ? parts[3] : parts[2] || "",
+                        priority: priority,
                         completed: false,
                         createdAt: Date.now(),
                         userId: user.uid
@@ -1249,6 +1393,18 @@ Here is the meeting data:
             }
         };
 
+        window.updateTaskPriority = async function(taskId, newPriority) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            try {
+                const taskDoc = doc(db, 'users', user.uid, 'tasks', taskId);
+                await updateDoc(taskDoc, { priority: newPriority });
+            } catch (error) {
+                console.error("Error updating task priority:", error);
+            }
+        };
+
         window.deleteTask = async function(taskId) {
             try {
                 const taskDoc = doc(db, 'users', user.uid, 'tasks', taskId);
@@ -1282,6 +1438,12 @@ Here is the meeting data:
             return (dateStr === '0000-00-00') ? null : dateStr;
         }
 
+        // Get priority weight with backward compatibility (default to Medium)
+        function getPriorityWeight(task) {
+            const priority = task.priority || 'Medium';
+            return PRIORITY_WEIGHTS[priority] || PRIORITY_WEIGHTS['Medium'];
+        }
+
         function renderTasks() {
             const list = document.getElementById('taskList');
             list.innerHTML = '';
@@ -1305,6 +1467,7 @@ Here is the meeting data:
                 return;
             }
 
+            // First, assign display numbers based on chronological order
             const chronologicalTasks = [...filteredTasks].sort((a, b) => {
                 const dateA = extractDate(a);
                 const dateB = extractDate(b);
@@ -1316,14 +1479,54 @@ Here is the meeting data:
 
             chronologicalTasks.forEach((task, index) => { task.displayNum = index + 1; });
 
+            // Sort tasks based on current sort order with multi-level sorting
             const finalTasks = [...chronologicalTasks].sort((a, b) => {
+                // Always push completed tasks to the bottom
                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
-                return currentSortOrder === 'asc' ? a.displayNum - b.displayNum : b.displayNum - a.displayNum;
+
+                switch (currentSortOrder) {
+                    case 'date-desc':
+                        // Latest First (Primary: Date Descending)
+                        return b.displayNum - a.displayNum;
+                    
+                    case 'date-asc':
+                        // Earliest First (Primary: Date Ascending)
+                        return a.displayNum - b.displayNum;
+                    
+                    case 'priority-desc':
+                        // Priority High to Low
+                        // Primary: Priority Weight (Critical > High > Medium > Low)
+                        // Secondary: Date (Latest First) for tie-breaker
+                        const weightDiffDesc = getPriorityWeight(b) - getPriorityWeight(a);
+                        if (weightDiffDesc !== 0) return weightDiffDesc;
+                        return b.displayNum - a.displayNum; // Latest first for same priority
+                    
+                    case 'priority-asc':
+                        // Priority Low to High
+                        // Primary: Priority Weight (Low > Medium > High > Critical)
+                        // Secondary: Date (Earliest First) for tie-breaker
+                        const weightDiffAsc = getPriorityWeight(a) - getPriorityWeight(b);
+                        if (weightDiffAsc !== 0) return weightDiffAsc;
+                        return a.displayNum - b.displayNum; // Earliest first for same priority
+                    
+                    default:
+                        return b.displayNum - a.displayNum;
+                }
             });
 
             finalTasks.forEach(task => {
                 const li = document.createElement('li');
-                li.className = `task-item ${task.completed ? 'completed' : ''}`;
+                // Get priority with backward compatibility
+                const taskPriority = task.priority || 'Medium';
+                const priorityClass = `priority-${taskPriority.toLowerCase()}`;
+                
+                li.className = `task-item ${task.completed ? 'completed' : ''} ${priorityClass}`;
+                
+                // Generate priority select options
+                const priorityOptions = PRIORITY_LEVELS.map(p => 
+                    `<option value="${p}" ${taskPriority === p ? 'selected' : ''}>${p}</option>`
+                ).join('');
+
                 li.innerHTML = `
                     <div class="task-number-box">${task.displayNum}</div>
                     <div class="checkbox-container">
@@ -1336,7 +1539,12 @@ Here is the meeting data:
                             <span>${task.deadline}${task.deadline && task.assigned ? ' | ' : ''}${task.assigned}</span>
                         </div>
                     </div>
-                    <button class="btn-delete" onclick="deleteTask('${task.id}')" aria-label="Delete task">Delete</button>
+                    <div class="task-actions">
+                        <select class="priority-select ${priorityClass}" onchange="updateTaskPriority('${task.id}', this.value)" aria-label="Change priority">
+                            ${priorityOptions}
+                        </select>
+                        <button class="btn-delete" onclick="deleteTask('${task.id}')" aria-label="Delete task">Delete</button>
+                    </div>
                 `;
                 list.appendChild(li);
             });
@@ -1376,12 +1584,13 @@ Here is the meeting data:
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
                 btn.textContent = "✅ Copied!";
-                setTimeout(() => btn.textContent = "📋 Copy Prompt", 2000);
+                btn.style.background = "var(--success)";
+                setTimeout(() => {
+                    btn.textContent = "📋 Copy Prompt";
+                    btn.style.background = "#475569";
+                }, 2000);
             });
         };
-
-        // Initial render
-        renderCategoryFilter();
     </script>
 </body>
 </html>
